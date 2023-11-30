@@ -1,4 +1,4 @@
-Home Security System Lab
+# Home Security System Lab
 
 I den här labben ska vi skapa en Angular-app som hjälper till att hantera ett säkerhetssystem för hemmet. Vi börjar med att sätta upp projektet med Angular CLI för att sedan använda de koncept som ni precis fått ta till er. 
 
@@ -6,6 +6,26 @@ Ni får gärna stanna kvar i detta rum men om ni hellre vill sitta vid era välb
 
 ## Tidsåtgång
 Beräknad tidsåtgång är ca 60 minuter, men vi har fram till kl 16 på oss.
+
+## Standalone
+Notera att labben använder standalone komponenter, vilket nu är standard vid nya Angularprojekt. Således finns ingen modul för importer utan varje komponent måste importera sina lokala beroenden.
+
+## Labbens innehåll
+1. [Skapa ett nytt Angular-projekt](#steg-1-skapa-ett-nytt-angular-projekt)
+2. [Sätt komponentstrukturen](#sätt-komponentstrukturen)
+    1. [Detektera rörelse](#steg-1-detektera-rörelse)
+    2. [Larmkomponent](#steg-2-larmkomponent)
+3. [Dela state - Property binding och Event emitter](#dela-state---property-binding-och-event-emitter)
+   1. [@Output och Event Emitter](#steg-1-output-och-event-emitter)
+   2. [Property binding via @Input](#steg-2-property-binding-via-input)
+   3. [Signalera rätt inmatad kod](#steg-3-signalera-rätt-inmatad-kod)
+4. [Trigga larmet](#trigga-larmet)
+5. [Händelseström](#händelseström)
+   1. [Skapa en service](#steg-1-skapa-en-event-service)
+   2. [Nyttja DI i komponenterna](#steg-2-nyttja-di-i-komponenterna)
+   3. [Skriv ut alla händelser](#steg-3-skriv-ut-alla-händelser)
+   4. [Prenumera på events (RxJS)](#steg-4-prenumerera-på-events)
+   5. [Pipes](#steg-5-pipes)
 
 ## Angular CLI
 
@@ -40,7 +60,7 @@ ng generate component motion-sensor
   <app-motion-sensor></app-motion-sensor>
 </div>
 ```
-Notera att du får ett fel i att komponenten inte är ett känt element. Du måste importera komponenten i app.component.ts och sen skicka in den i listan av template dependencies (imports).
+> **OBS:**  Du får ett fel i att komponenten inte är ett känt element. Du måste importera komponenten i app.component.ts och sen skicka in den i listan av template dependencies (imports).
 
 ```javascript
 import { MotionSensorComponent } from './motion-sensor/motion-sensor.component';
@@ -52,10 +72,10 @@ imports: [..., MotionSensorComponent]
 
 ### Steg 5: Starta appen
 ```bash
-ng serve
+ng serve --open
 ```
 
-Navigera till http://localhost:4200/ i din webbläsare, och du bör se texten "motion-sensor works!"
+Webbläsaren bör öppnas, om inte så navigera till http://localhost:4200/. Du bör se texten "motion-sensor works!"
 
 Bra jobbat! Du har skapat grunden för vår Angular-app. Nästa steg är att bygga ut funktionerna.
 
@@ -98,7 +118,7 @@ I templaten för security-keypad, skapa knappar som anropar metoderna för att l
 ### Steg 3: Förberedelser för att trigga larmet på rörelse när larmet är på
 Nu har vi två komponenter med varsitt state. Vi behöver nu en till komponent som symboliserar larmsystemet. Larmssystemet skall triggas om det är aktiverat och rörelse detekteras. 
 
-Skapa en komponent ```security-system```, via CLI, som kommer bli systemets nav. Lägg till komponenten i ```app.component.html```. Tänk på template dependencies.
+Skapa en komponent ```security-system```, via CLI, som kommer bli systemets nav/orkestrator. Lägg till komponenten i ```app.component.html```. Tänk på template dependencies.
 
 #### Låt security-system vara förälder till övriga komponenter
 Att lägga alla komponenter platt efter varandra i app.component.html är inte hållbart. Vår nyaste komponent, ```security-system``` kommer få två "child components".
@@ -143,7 +163,7 @@ Templaten för parent component, dvs ```security-system.component.html``` måste
 <app-motion-sensor (motionEvent)="onMotion($event)"></app-motion-sensor>
 ```
 
-```$event``` är ett objekt som finns och som i detta fall blir typat till ```boolean```, eftersom ```motionEvent``` är av typen ```EventEmitter<boolean>```.
+```$event``` är ett objekt som finns, och som i detta fall blir typat till ```boolean```, eftersom ```motionEvent``` är av typen ```EventEmitter<boolean>```.
 
 Utöka klassen ```SecuritySystemComponent``` med följande eventhanterare och property.
 
@@ -168,7 +188,9 @@ Vår keypad måste veta om koden, så att den senare kan signalera om rätt kod 
 <app-security-keypad [code]="code" ></app-security-keypad>
 ```
 
-Notera att code (```[code]```) inte än finns definierad i vår keypad. Definiera egenskapen i SecurityKeypadComponent. Importera ```@Input``` från ```@angular/core```. *@Input dekorerar egenskapen som input-property, dvs att egenskapen kan skickas ner från sin förälder*.
+Notera att code (```[code]```) inte än finns definierad i vår keypad. Definiera egenskapen i SecurityKeypadComponent. Importera ```@Input``` från ```@angular/core```. 
+
+> **Notis:**  @Input dekorerar egenskapen som input-property, dvs att egenskapen kan skickas ner från sin förälder.
 
 ```typescript
 @Input() code?: string;
@@ -223,7 +245,9 @@ I systemets orkestrator, ```security-system.component```, lägg till den nya kom
 Nu bör du se en röd pulserande cirkel i browsern.
 
 ### Steg 3: Villkorsstyr visning med NgIf
-Alarm-state ska endast synas när larmet faktiskt gått av, dvs när ```alarmTriggered === true```. Lägg på direktivet ```*ngIf``` med villkoret ```alarmTriggered``` (*observera att ngIf måste prefixas med* *).
+Alarm-state ska endast synas när larmet faktiskt gått av, dvs när ```alarmTriggered === true```. Lägg på direktivet ```*ngIf``` med villkoret ```alarmTriggered``` 
+
+> **OBS:**  ngIf måste prefixas med*
 
 ### Kodvalidering
 Nu bör koden se ut [så här](#trigga-larmet-validering)
@@ -260,7 +284,9 @@ export interface Event {
 ### Steg 2: Nyttja DI i komponenterna
 Nu ska vi injekta vår nya service i komponenterna. Här kan man göra ett vägval, antingen kan man låta orkestratorn, dvs security-system.component.ts ansvara för att registrera händelserna, eller så kan varje komponent registrera sina egna händelser. *För denna labbs skull kommer varje komponent registrera sina egna händelser*.
 
-Injekta servicen i ```MotionSensorComponents``` konstruktor och markera den som private. Registrera ett event direkt i konstruktorn om att sensorn är initialiserad. *VSCode bör hjälpa till med import statement av EventService, om inte får du göra det manuellt*.
+Injekta servicen i ```MotionSensorComponents``` konstruktor och markera den som private. Registrera ett event direkt i konstruktorn om att sensorn är initialiserad.
+
+> **OBS:**  VSCode bör hjälpa till med import statement av EventService, om inte får du göra det manuellt
 
 ```typescript
   constructor(private eventService: EventService) {
