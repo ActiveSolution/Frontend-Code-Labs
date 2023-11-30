@@ -351,7 +351,7 @@ Lösningen stavas ```RxJS```. RxJS arbetar med ```Observables``` (pub/sub) som e
 
 I vår EventService, ska vi skapa en privat property av typen ```ReplaySubject<Event[]>``` samt en ny publik property ```events$``` av typen ```Observable<Event[]>```. *$ är konventionsmarkör att en property är en Observable*. 
 
-Vi arbetar med ett ```ReplaySubject``` för att kunna **buffra** de init-events som emittas från kontruktorerna, dessa kommer emittas innan vi hinner subscriba på events. hade vi inte haft det behovet hade ```BehaviorSubject``` räckt. Att vi använder ```Subjects``` istället för t.ex. ```of``` är för att kunna signalera ändringar och skicka events en och en till subscribers.
+Vi arbetar med ett ```ReplaySubject``` för att kunna **buffra** de init-events som emittas från kontruktorerna, dessa kommer emittas innan vi hinner subscriba på events. hade vi inte haft det behovet hade ```BehaviorSubject``` räckt. Att vi använder ```Subjects``` istället för t.ex. ```of``` är för att kunna signalera till subscribers varje gång events trillar in.
 
 ```typescript
 ...
@@ -385,8 +385,8 @@ ngOnInit() {
 med 
 
 ```typescript
-this.eventService.events$.subscribe(event => {
-    this.events.push(event)
+this.eventService.events$.subscribe(events => {
+    this.events = events;
 });
 ```
 
@@ -407,7 +407,7 @@ events: Event[] = []
 ...
 
 this.eventService.events$.subscribe(event => {
-    this.events.push(event)
+    this.events = events;
 });
 ```
 
@@ -423,7 +423,7 @@ this.events$ = this.eventService.events$;
 
 Vi har alltså inte längre något internt state rörande events, utan istället exponerar vi en observable ```events$``` till vår template. ```events$``` tilldelas observablen från vår EventService. Eftersom en Observable är asynkron ska vi använda en ```async pipe``` i vår template.
 
-I eventloggens template binder vi ngFor mot ```events```, ersätt det med ```events$ | async```. Nu ska allt fungera som förut igen.
+I eventloggens template binder vi jsut nu ngFor mot ```events```, ersätt det med ```events$ | async```. Nu ska allt fungera som förut igen.
 
 En sista pipe att använda är ```date```. Istället för att endast skriva ut meddelandet vill vi också skriva ut tidsstämpeln i formatet yyyy-MM-dd hh:mm:ss. 
 
