@@ -257,6 +257,8 @@ Alarm-state ska endast synas när larmet faktiskt gått av, dvs när ```alarmTri
 
 > **OBS:**  ngIf måste prefixas med*
 
+> **OBS:**  Om du får ett felmeddelande om att ngIf inte är ett giltigt attribut måste du importera ngIf från @angular/common
+
 ### Kodvalidering
 Nu bör koden se ut [så här](#trigga-larmet-validering)
 
