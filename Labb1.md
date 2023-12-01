@@ -7,6 +7,14 @@ Ni får gärna stanna kvar i detta rum men om ni hellre vill sitta vid era välb
 ## Tidsåtgång
 Beräknad tidsåtgång är ca 60 minuter, men vi har fram till kl 16 på oss.
 
+## Innan du börjar
+Du kommer behöva en del verktyg i denna labb:
+
+- Node version >= 18.13 eller >= 20.9
+- Npm >= 9
+- Angular CLI version 17
+- IDE, förslagsvis VSCode
+
 ## Standalone
 Notera att labben använder standalone komponenter, vilket nu är standard vid nya Angularprojekt. Således finns ingen modul för importer utan varje komponent måste importera sina lokala beroenden.
 
@@ -272,7 +280,7 @@ Notera ```@Injectable``` i ts-filen som aktiverar möjligheten att ange ```Event
 })
 ```
 
-Skapa en metod i servicen, ```RegisterEvent```, av typen ```void```. Låt metoden ta in ett ```Event``` som parameter. Logga ut eventet till konsollen för stunden. Se definitionen av ```Event``` här nedan. Definiera interfacet längst ned i vår service-fil.
+Skapa en metod i servicen, ```registerEvent```, av typen ```void```. Låt metoden ta in ett ```Event``` som parameter. Logga ut eventet till konsollen för stunden. Se definitionen av ```Event``` här nedan. Definiera interfacet längst ned i vår service-fil.
 
 ```typescript
 export interface Event {
@@ -327,7 +335,7 @@ constructor(private eventService: EventService){
 
 Nu rapporterar vi de händelser som systemet har och om du kollar i browserns konsoll bör du se en del event-outputs:
 
-![console logs](image.png)
+![console logs](console-events.png)
 
 ### Steg 3: Skriv ut alla händelser
 Nu ska vi skapa en eventlogg som tar emot alla händelser och skriver ut dem i browsern. Skapa en komponent, ```event-log```, och lägg till den efter security-system i ```app-component.html```.
