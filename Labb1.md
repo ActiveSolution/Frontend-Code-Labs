@@ -190,7 +190,7 @@ Systemet behöver ha en kod för att larma på och av. De blir ```security-syste
 
 Låt oss definera en code-property av typen ```string``` i ```security-system.component.ts```. Låt propertyn får defaultvärdet **2**.
 
-Vår keypad måste veta om koden, så att den senare kan signalera om rätt kod är inmatad eller ej. Du ska nu använda ```property binding``` för att binda ```code``` till motsvarande property i vår keypad. Lägg till ```[code]="code"``` i ```security-system.component.ts```.
+Vår keypad måste veta om koden, så att den senare kan signalera om rätt kod är inmatad eller ej. Du ska nu använda ```property binding``` för att binda ```code``` till motsvarande property i vår keypad. Lägg till ```[code]="code"``` i ```security-system.component.html```.
 
 ```html
 <app-security-keypad [code]="code" ></app-security-keypad>
@@ -387,7 +387,7 @@ Lösningen stavas ```RxJS```. RxJS arbetar med ```Observables``` (pub/sub) som e
 
 I vår EventService, ska vi skapa en privat property av typen ```ReplaySubject<Event[]>``` samt en ny publik property ```events$``` av typen ```Observable<Event[]>```. *$ är konventionsmarkör att en property är en Observable*. 
 
-Vi arbetar med ett ```ReplaySubject``` för att kunna **buffra** de init-events som emittas från kontruktorerna, dessa kommer emittas innan vi hinner subscriba på events. hade vi inte haft det behovet hade ```BehaviorSubject``` räckt. Att vi använder ```Subjects``` istället för t.ex. ```of``` är för att kunna signalera till subscribers varje gång events trillar in.
+Vi arbetar med ett ```ReplaySubject``` för att kunna **buffra** de init-events som emittas från kontruktorerna, dessa kommer emittas innan vi hinner subscriba på events. hade vi inte haft det behovet hade ```BehaviorSubject``` eller ett ```Subject``` räckt. Att vi använder ```Subjects``` istället för t.ex. ```of``` är för att kunna signalera till subscribers varje gång events trillar in.
 
 ```typescript
 ...
