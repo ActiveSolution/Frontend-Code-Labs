@@ -2,21 +2,13 @@
 This lab is a continuation of the [previous lab](/Labb1.md). If you have completed that lab you can begin, otherwise you will find a "finished" lab 1 solution [here](https://github.com/ActiveSolution/Frontend-Code-Labs/tree/main/src) to begin this lab from.
 
 ## Content of this lab (TODO)
-1. [Skapa ett nytt Angular-projekt](#steg-1-skapa-ett-nytt-angular-projekt)
-2. [Sätt komponentstrukturen](#sätt-komponentstrukturen)
-    1. [Detektera rörelse](#steg-1-detektera-rörelse)
-    2. [Larmkomponent](#steg-2-larmkomponent)
-3. [Dela state - Property binding och Event emitter](#dela-state---property-binding-och-event-emitter)
-   1. [@Output och Event Emitter](#steg-1-output-och-event-emitter)
-   2. [Property binding via @Input](#steg-2-property-binding-via-input)
-   3. [Signalera rätt inmatad kod](#steg-3-signalera-rätt-inmatad-kod)
-4. [Trigga larmet](#trigga-larmet)
-5. [Händelseström](#händelseström)
-   1. [Skapa en service](#steg-1-skapa-en-event-service)
-   2. [Nyttja DI i komponenterna](#steg-2-nyttja-di-i-komponenterna)
-   3. [Skriv ut alla händelser](#steg-3-skriv-ut-alla-händelser)
-   4. [Prenumera på events (RxJS)](#steg-4-prenumerera-på-events)
-   5. [Pipes](#steg-5-pipes)
+1. [Recap - where are we now](#recap---where-are-we-now)
+2. [This lab](#this-lab)
+3. [Create a continous sensor state change feed](#create-a-continous-sensor-state-change-feed)
+4. [Add support for multiple motion sensors](#add-support-for-multiple-motion-sensors)
+5. [Use the motion sensor component](#use-the-motion-sensor-component)
+6. [Add some UI structure and Material UI](#add-some-ui-structure-and-material-ui)
+7. [Last touches](#last-touches)
 
 ## Recap - where are we now
 Last lab ended with us creating a log of events using a ```service``` that was ```injected``` into components. We had a brief look at ```RxJS``` and ```Observables``` to consume the stream of events. 
