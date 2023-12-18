@@ -1,11 +1,14 @@
 import { Injectable } from '@angular/core';
-import { Observable, interval, map, merge, scan } from 'rxjs';
+import { Observable, interval, map, merge, scan, tap } from 'rxjs';
+import { changeState } from './actions/motion.actions';
+import { IMotionSensorState } from './reducers';
+import { Store } from '@ngrx/store';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SensorDataFeedService {
-  constructor() {
+  constructor(private store: Store) {
     let motionSensors: MotionSensorStateEmitter[] = [];
 
     for (let i = 0; i < 10; i++) {
@@ -13,27 +16,21 @@ export class SensorDataFeedService {
     }
 
     this.motionSensorStream$ = merge(
-      ...motionSensors.map(sensor => sensor.startListen()),
+      ...motionSensors.map((sensor) => sensor.startListen())
+    ).pipe(
+      tap((data) => {
+        this.store.dispatch(changeState({ state: data }));
+      })
     );
-      // .pipe(
-      //   filter(data => data.state !== data.prevousState));
+    // .pipe(
+    //   filter(data => data.state !== data.prevousState));
   }
 
   motionSensorStream$: Observable<IMotionSensorState>;
 }
 
-export interface IMotionSensorState {
-  state: boolean;
-  previousState: boolean;
-  message: string;
-  timestamp: Date;
-  name: string;
-  id: string;
-}
-
 class MotionSensorStateEmitter {
-  constructor(private id: number) {
-  }
+  constructor(private id: number) {}
 
   public startListen(): Observable<IMotionSensorState> {
     var resolution = Math.max(2500, Math.random() * 10000);

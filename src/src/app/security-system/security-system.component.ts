@@ -4,9 +4,11 @@ import { MotionSensorComponent } from '../motion-sensor/motion-sensor.component'
 import { SecurityKeypadComponent } from '../security-keypad/security-keypad.component';
 import { AlarmStateComponent } from '../alarm-state/alarm-state.component';
 import { EventService } from '../event.service';
-import { IMotionSensorState, SensorDataFeedService } from '../sensor-data-feed.service';
 import { Observable, scan, map } from 'rxjs';
-import {MatGridListModule} from '@angular/material/grid-list';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { Store } from '@ngrx/store';
+import { selectFeatureMotionSensor } from '../reducers';
+import { IMotionSensorState } from '../reducers/index';
 
 @Component({
   selector: 'app-security-system',
@@ -23,23 +25,12 @@ export class SecuritySystemComponent {
 
   motionSensors$: Observable<IMotionSensorState[]>;
 
-  constructor(private eventService: EventService, stream: SensorDataFeedService){
+  constructor(private eventService: EventService, private store: Store){
     eventService.registerEvent({ message: 'Security system initialized', timestamp: new Date() });
 
-    this.motionSensors$ = stream.motionSensorStream$.pipe(
-      scan((acc, curr) => {
-        const existingIndex = acc.findIndex(item => item.id === curr.id);
-    
-        if (existingIndex !== -1) {
-          acc[existingIndex] = curr;
-        } else {        
-          acc.push(curr);
-        }
-    
-        return acc;
-      }, [] as IMotionSensorState[]),
-      map((sensors) => sensors.sort((a, b) => a.id.localeCompare(b.id)))
-    )
+    this.motionSensors$ = this.store.select(selectFeatureMotionSensor).pipe(
+      map((sensors) => [...sensors].sort((a, b) => a.id.localeCompare(b.id)))
+    );
   }
 
   //TODO: In lab, how do we do this kind of "automation"?
@@ -64,5 +55,5 @@ export class SecuritySystemComponent {
 
   trackById(index: number, sensor: IMotionSensorState): string {
     return sensor.id;
-}
+  }
 }

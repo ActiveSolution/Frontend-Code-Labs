@@ -9,6 +9,8 @@ This lab is a continuation of the [previous lab](/Labb1.md). If you have complet
 5. [Use the motion sensor component](#use-the-motion-sensor-component)
 6. [Add some UI structure and Material UI](#add-some-ui-structure-and-material-ui)
 7. [Last touches](#last-touches)
+8. [Add NgRX - Global state store](#add-ngrx---global-state-store)
+9. [Populate our state and use it](#populate-our-state-and-use-it)
 
 ## Recap - where are we now
 Last lab ended with us creating a log of events using a ```service``` that was ```injected``` into components. We had a brief look at ```RxJS``` and ```Observables``` to consume the stream of events. 
@@ -24,6 +26,9 @@ All together we have created a very simple alarm system that includes the follow
 We are going to explore a few concepts in more details. We will look at ```State management``` and ```data flow```. To our help we have ```RxJS``` to be able to work with Observables which will emit continous streams of sensor readings. We will also look at ```NgRx```, which is a global state store that uses RxJS as its backbone. 
 
 We will work in iterations, starting without a state store, and then add that layer of 'complexity' and hopefully see why such a 'complexity' makes the system less complex.
+
+> **Note**
+At the end of this lab, we will not have a functioning security system since it will shift focus a bit. For example, we will not be able to act on motion detection, and thus not trigger the alarm. Hopefully we can put it together in a later lab.
 
 ## Create a continous sensor state change feed
 Up til now, a change in state of a motion sensor was triggered manually. This is not the case in the real world. We are going to make the motion sensor component read only, so it just reads the state coming from an "external source" such as a web socket connection.
@@ -358,7 +363,182 @@ To adress the first issue, we need to sort the observable in ```security-system.
 
 To adress the second issue, you will need to find a way to tell Angular that the change detection should be by the sensors id.
 
-If you want to validate your solution, or get stuck, check out the code [here]().
+If you want to validate your solution, or get stuck, check out the code [here](#last-touches-1).
+
+## Add NgRX - Global state store
+Time to introduce NgRX and see how we can use a global state store to manage the sensor state.
+
+### Step 1: Install NgRx
+```bash
+ng add @ngrx/store@latest
+```
+
+This updates your app.config.ts file with ```provideStore(reducers, { metaReducers })```. We are going to use something called ```feature state``` which will force us to diverge from what's added. We'll come to that soon. A feature, or a feature selector, is basically a slice of the global state which can be retrieved. 
+
+The command also added the ```reducers``` folder along with an ```index.ts``` file containing some scaffolded code. For the sake of this lab, remove the reducers and metareducers definition and then remove ```provideStore(reducers, { metaReducers })``` from app.config.ts. 
+
+### Step 2: Define our state
+We will need to define our state, starting with the global state. In ```reducers/index.ts```, there is a state interface defined. Let's copy paste our ```IMotionSensorState``` into ```index.ts```, and add an array in the State of type ```IMotionSensorState```.
+
+```typescript
+export interface State {
+  motionSensorFeature: IMotionSensorState[];
+}
+
+export interface IMotionSensorState {
+  state: boolean;
+  previousState: boolean;
+  message: string;
+  timestamp: Date;
+  name: string;
+  id: string;
+}
+```
+
+```State``` is our global state, and ```motionSensorFeature``` will be a *slice of that state*. For now thats all we have.
+
+### Step 3: Defina a feature selector
+To be able to select a slice of our state, we need to define a selector. In this case we will use a feature selector. Define it like so:
+
+```typescript
+const getMotionSensorState = createFeatureSelector<IMotionSensorFeatureState>('motionSensors'); 
+```
+
+> **Note** By using *createFeatureSelector* we enable this selector to be *Memoized* ("cached")
+
+Then we need to export
+
+```typescript
+export const selectFeatureMotionSensor = createSelector(
+  getMotionSensorState,
+  (state: IMotionSensorFeatureState) => state.motionSensors
+);
+``` 
+
+### Step 4: Define our action
+Create an folder for our actions under app, so ``` /app/actions``` . Add an ``` motion.actions.ts```  file. Copy this code into that file
+
+```typescript
+import { createAction, props } from '@ngrx/store';
+import { IMotionSensorState } from '../reducers';
+
+export const changeState = createAction('[Motion] State change', props<{ state: IMotionSensorState }>());
+```
+
+Here we are defining a single action, called "state changed". *I we would have more granular control of the state, we would probably define more granular actions.*
+
+> **Note** [Motion] is a categorization naming convention. From the docs "*The value of the type comes in the form of [Source] Event and is used to provide a context of what category of action it is, and where an action was dispatched from.*"
+
+### Step 5: Define our reducer
+Under the /reducers folder, add a ```motion.reducer.ts``` file. Here we will define a reducer for our action ```changeState```. A reducer takes an initial state and then a set of actions that mutate the state. We only have one action. Define our ```motionSensorReducer``` as:
+
+```typescript
+import { createReducer, on } from '@ngrx/store';
+import { changeState } from '../actions/motion.actions';
+import { IMotionSensorFeatureState } from './index';
+
+export const initialState: IMotionSensorFeatureState = {
+  motionSensors: [],
+};
+
+export const motionSensorReducer = createReducer(
+  initialState,
+  on(changeState, (state, props) => {
+    let existing  = state.motionSensors.find((sensor) => sensor.id === props.state.id);
+
+    if (existing) {
+      return {
+        ...state,
+        motionSensors: state.motionSensors.map((sensor) => sensor.id === props.state.id ? props.state : sensor
+        ),
+      };
+    }
+
+    return {
+      ...state,
+      motionSensors: [...state.motionSensors, props.state],
+    };
+  }) 
+);
+```
+
+We can see that our initial state is the empty array, and then for every ```changeState``` action, we either add or update an existing sensor. We are using two ngrx methods here; ```createReducer``` and ```on```.
+
+### Conclusion
+We have had a first glance at ngrx, allthough we have not actually consumed anything but we have set up all the parts needed for us to do so. This is what we have done:
+
+- Defined a state
+- Defined a selector/queryable slice of our state
+- Defined an action to be invoked with a motion state change
+- Defined a reducer to modify our state given the passed in motion sensor state change
+
+Your code should look something like [this](#add-ngrx---global-state-store-1)
+
+## Populate our state and use it
+In order to actually use our new state we need to wire it up, consume to it and dispatch our defined action.
+
+### Step 1: Wire it up
+Let's first clean up our duplicate ```IMotionSensorState``` definitons. We are going to use the one in ```/reducer/index.ts``` from now on. So, delete the definition in ```sensor-data-feed.component.ts``` and import it from reducers instead. Import the same in ```motion-sensor.component.ts``` and ```security-system.component.ts```.
+
+In our app.config.ts file, we need to provide a store and a state, add the following to the end of the provider list. Import the needed dependencies.
+
+```typescript
+   ...
+   provideStore(),
+   provideState({ name: 'motionSensors', reducer: motionSensorReducer })
+```
+
+This will tell rxjs to use that reducer when an action is dispatched.
+
+### Step 2: Use our action
+Up til now we are emitting a feed from ```sensor-data-feed.service.ts```. We will still be doing so, but we will not expose that stream anymore, instead we will dispatch ```changeState``` action for each item in the observable. 
+
+An action is dispatched by the ```ngrx Store instance```. Inject ```Store```, imported from ```@ngrx/store```, into the constructor of the service. Now we need to tap into the merged observable to dispatch actions. We are going to use RxJS ```tap``` method for this. ```Tap``` is the place to perform ```side effects```, which an action dispatch is.
+
+So, modify the code assigning the public observable motionSensorStream$
+
+```typescript
+   this.motionSensorStream$ = merge(
+      ...motionSensors.map((sensor) => sensor.startListen())
+    ).pipe(
+      tap((data) => {
+        this.store.dispatch(changeState({ state: data }));
+      })
+    );
+``` 
+
+Here we ```tap``` into the merged feed and dispatches an action for each item. We are still assigning to ```motionSensorStream$``` though, but lets keep that for now.
+
+Now when we run the application, we will dispatch actions which will be passed through our reducer building up our state. This state should now be ready for consumption.
+
+### Step 3: Consume our state
+In security-system.component.ts, remove the reference to SensorDataFeedService as we no longer rely on it. Instead inject the ```ngrx store``` instance.
+
+Previously we used the ```scan``` method to make the feed unique by ID. If you noticed, *the same thing is done in our reducer*, so we no longer need to do this on the component level. Then we have the ```sort```, we could move that to our reducer too, *but it might be a good choice to leave that to the consumer*. Let's do that.
+
+```typescript
+this.motionSensors$ = this.store.select(selectFeatureMotionSensor).pipe(
+   map((sensors) => sensors.sort((a, b) => a.id.localeCompare(b.id)))
+);
+```
+
+As you can see, we are ```selecting``` the motion sensor feature state, which returns an observable that we can pipe into as we are used to.
+
+Why does this not compile?  
+
+<details>
+  <summary><i>Expand for the answer</i></summary>
+  The state is in a frozen state, it is immutable, and sort mutates the array it is sorting on. We need to create a new instance to sort with:
+  <i>Replace sensors.sort with [...sensors].sort</i>
+</details>
+
+We should now have the same behaviour in the browser, but the state is coming from our global state store using a feature selector for our motion sensors.
+
+### Step 4: Something to discuss and reason about
+The observable from ```sensor-data-feed``` is still public (and existing) and this is due to the dependency to our ```event-service```. One could be tempted to add a new slice of state for this, but would we be interested in keeping all state changes as state? Perhaps, perhaps not. Using **ngrx is not a silver bullet**, and each usage should be **carefully** considered. Do you think a new slice of state is the correct way forward, or do we still rely on the original observable?
+
+### Conclusion
+We have learned how to wire up our state using ```provideState```. To add more slices, just add more calls to ```provideState```, one for each slice. We have also learned that we use the ```ngrx store``` to ```dispatch actions```, which then ```mutates state``` via our defined ```reducer```. Then we have selected our state using the store and its ```select``` method. The output is an observable to ```pipe``` into if needed.
 
 ## Kodvalidering
 
@@ -627,4 +807,77 @@ trackById(index: number, sensor: IMotionSensorState): string {
 security-system.component.html
 ```html
 <div *ngFor="let sensor of motionSensors$ | async; trackBy: trackById">
+```
+
+### Add NgRX - Global state store
+reducers/index.ts
+```typescript
+import {
+  createFeatureSelector,
+  createSelector,
+} from '@ngrx/store';
+
+export interface State {
+  motionSensorFeature: IMotionSensorFeatureState;
+}
+
+export interface IMotionSensorFeatureState {
+  motionSensors: IMotionSensorState[];
+}
+
+export interface IMotionSensorState {
+  state: boolean;
+  previousState: boolean;
+  message: string;
+  timestamp: Date;
+  name: string;
+  id: string;
+}
+
+const getMotionSensorState = createFeatureSelector<IMotionSensorFeatureState>('motionSensors'); 
+
+export const selectFeatureMotionSensor = createSelector(
+  getMotionSensorState,
+  (state: IMotionSensorFeatureState) => state.motionSensors
+);
+```
+
+motion.actions.ts
+```typescript
+import { createAction, props } from '@ngrx/store';
+import { IMotionSensorState } from '../reducers';
+
+export const changeState = createAction('[Motion] State change', props<{ state: IMotionSensorState }>());
+```
+
+motion.reducers.ts
+```typescript
+import { createReducer, on } from '@ngrx/store';
+import { changeState } from '../actions/motion.actions';
+import { IMotionSensorFeatureState } from './index';
+
+export const initialState: IMotionSensorFeatureState = {
+  motionSensors: [],
+};
+
+export const motionSensorReducer = createReducer(
+  initialState,
+  on(changeState, (state, props) => {
+    let existing  = state.motionSensors.find((sensor) => sensor.id === props.state.id);
+
+    if (existing) {
+      return {
+        ...state,
+        motionSensors: state.motionSensors.map((sensor) => sensor.id === props.state.id ? props.state : sensor
+        ),
+      };
+    }
+
+    return {
+      ...state,
+      motionSensors: [...state.motionSensors, props.state],
+    };
+  }) 
+);
+
 ```

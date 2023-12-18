@@ -1,7 +1,7 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EventService } from '../event.service';
-import { IMotionSensorState } from '../sensor-data-feed.service';
+import { IMotionSensorState } from '../reducers';
 import {MatIconModule} from '@angular/material/icon';
 
 @Component({
