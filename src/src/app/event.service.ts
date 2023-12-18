@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject } from 'rxjs';
+import { SensorDataFeedService } from './sensor-data-feed.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,10 +11,17 @@ export class EventService {
 
   events$: Observable<Event[]> = this.subject$.asObservable();
 
-  constructor() { 
+  constructor(sensorDataFeedService: SensorDataFeedService) { 
+    sensorDataFeedService.motionSensorStream$.subscribe((data) => {
+      this.registerEvent({ message: data.message, timestamp: data.timestamp });
+    });
   }
 
   registerEvent(event: Event): void {
+    if(this.events.length >= 20) {
+      this.events.shift();
+    }
+
     this.events.push(event);
 
     this.subject$.next(this.events);

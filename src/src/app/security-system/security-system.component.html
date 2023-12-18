@@ -1,6 +1,18 @@
-{{ motionDetected ? '[Parent] Motion Detected' : '[Parent]  No Motion Detected' }}
-{{ alarmActive ? '[Parent] Larm på' : '[Parent]  Larm av' }}
+{{
+  motionDetected ? "[Parent] Motion Detected" : "[Parent]  No Motion Detected"
+}}
+{{ alarmActive ? "[Parent] Larm på" : "[Parent]  Larm av" }}
 
-<app-motion-sensor (motionEvent)="onMotion($event)"></app-motion-sensor>
-<app-security-keypad [code]="code" (correctCodeInput)="onCodeMatch()" ></app-security-keypad>
+<app-security-keypad
+  [code]="code"
+  (correctCodeInput)="onCodeMatch()"
+></app-security-keypad>
 <app-alarm-state *ngIf="alarmTriggered"></app-alarm-state>
+
+<mat-grid-list cols="5" rowHeight="100px">
+  <div *ngFor="let sensor of motionSensors$ | async; trackBy: trackById">
+    <mat-grid-tile>
+      <app-motion-sensor [state]="sensor"></app-motion-sensor>
+    </mat-grid-tile>
+  </div>
+</mat-grid-list>

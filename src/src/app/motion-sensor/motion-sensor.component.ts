@@ -1,36 +1,21 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EventService } from '../event.service';
+import { IMotionSensorState } from '../sensor-data-feed.service';
+import {MatIconModule} from '@angular/material/icon';
 
 @Component({
   selector: 'app-motion-sensor',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './motion-sensor.component.html',
   styleUrl: './motion-sensor.component.css'
 })
 export class MotionSensorComponent {
+  @Input({ required: true }) state!: IMotionSensorState;
   motionDetected: boolean = false;
 
-  constructor(private eventService: EventService) {
+  constructor(eventService: EventService) {
     eventService.registerEvent({ message: 'Motion sensor initialized', timestamp: new Date() });
   }
-
-  setMotionDetected(): void {
-    this.motionDetected = true;
-
-    this.eventService.registerEvent({ message: 'Motion detected', timestamp: new Date() });
-
-    this.motionEvent.emit(true);
-  }
-
-  clearMotion(): void {
-    this.motionDetected = false;
-
-    this.eventService.registerEvent({ message: 'Motion cleared', timestamp: new Date() });
-
-    this.motionEvent.emit(false);
-  }
-
-  @Output() motionEvent = new EventEmitter<boolean>();
 }

@@ -4,11 +4,14 @@ import { MotionSensorComponent } from '../motion-sensor/motion-sensor.component'
 import { SecurityKeypadComponent } from '../security-keypad/security-keypad.component';
 import { AlarmStateComponent } from '../alarm-state/alarm-state.component';
 import { EventService } from '../event.service';
+import { IMotionSensorState, SensorDataFeedService } from '../sensor-data-feed.service';
+import { Observable, scan, map } from 'rxjs';
+import {MatGridListModule} from '@angular/material/grid-list';
 
 @Component({
   selector: 'app-security-system',
   standalone: true,
-  imports: [CommonModule, MotionSensorComponent, SecurityKeypadComponent, AlarmStateComponent],
+  imports: [CommonModule, MotionSensorComponent, SecurityKeypadComponent, AlarmStateComponent, MatGridListModule],
   templateUrl: './security-system.component.html',
   styleUrl: './security-system.component.css'
 })
@@ -18,10 +21,28 @@ export class SecuritySystemComponent {
   code: string = '2';
   motionDetected: boolean = false;
 
-  constructor(private eventService: EventService){
+  motionSensors$: Observable<IMotionSensorState[]>;
+
+  constructor(private eventService: EventService, stream: SensorDataFeedService){
     eventService.registerEvent({ message: 'Security system initialized', timestamp: new Date() });
+
+    this.motionSensors$ = stream.motionSensorStream$.pipe(
+      scan((acc, curr) => {
+        const existingIndex = acc.findIndex(item => item.id === curr.id);
+    
+        if (existingIndex !== -1) {
+          acc[existingIndex] = curr;
+        } else {        
+          acc.push(curr);
+        }
+    
+        return acc;
+      }, [] as IMotionSensorState[]),
+      map((sensors) => sensors.sort((a, b) => a.id.localeCompare(b.id)))
+    )
   }
 
+  //TODO: In lab, how do we do this kind of "automation"?
   onMotion(motionDetected: boolean): void {
     this.motionDetected = motionDetected;
 
@@ -40,4 +61,8 @@ export class SecuritySystemComponent {
       this.eventService.registerEvent({ message: 'Alarm cleared', timestamp: new Date() });
     }
   }
+
+  trackById(index: number, sensor: IMotionSensorState): string {
+    return sensor.id;
+}
 }
