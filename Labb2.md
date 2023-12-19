@@ -542,7 +542,7 @@ The observable from ```sensor-data-feed``` is still public (and existing) and th
 ### Conclusion
 We have learned how to wire up our state using ```provideState```. To add more slices, just add more calls to ```provideState```, one for each slice. We have also learned that we use the ```ngrx store``` to ```dispatch actions```, which then ```mutates state``` via our defined ```reducer```. Then we have selected our state using the store and its ```select``` method. The output is an observable to ```pipe``` into if needed.
 
-## Kodvalidering
+## Code review
 
 ### Create a continous sensor state change feed
 
