@@ -196,8 +196,6 @@ scan((acc, curr) => {
 
 We are only interested in changing the previous state property, so we just ```spread``` out all the other properties. For ```previousState```, we use the accumulated (or previous item) state, which will be the previous state.
 
-Looking in your browser, you should now see the previousState value in action.
-
 ### Conclusion
 We have made our previous observable resusable and then added 10 motion sensors that are emitting continously. In doing so we have used two new ```RxJS``` functions, ```merge``` and ```scan```. We used merge to merge our 10 observables into a single observable that is being consumed by our event service. Pay attention to the fact that we did not have to change our event service doing so as the interface is the same as before.
 
@@ -223,7 +221,7 @@ Replace the code in the template file (motion-sensor.component.html) with
 There will now be an error in our orchestrator, ```security-system.component```, since the input parameter, ```state```, is a required property. This property is not bound as of now. Remove that motion sensor from the template of the orchestrator since we will render motion sensor dynamically going forward.
 
 ### Step 2: Consume sensor state feed in our security system
-Start by defining an observable of ```IMotionSensorState array```.
+Start by defining an observable of ```IMotionSensorState array``` in ```security-system.compontent.ts```.
 
 ```typescript
 motionSensors$: Observable<IMotionSensorState[]>;
@@ -373,16 +371,20 @@ Time to introduce NgRX and see how we can use a global state store to manage the
 ng add @ngrx/store@latest
 ```
 
-This updates your app.config.ts file with ```provideStore(reducers, { metaReducers })```. We are going to use something called ```feature state``` which will force us to diverge from what's added. We'll come to that soon. A feature, or a feature selector, is basically a slice of the global state which can be retrieved. 
+This updates your app.config.ts file with ```provideStore()```. We are going to use something called ```feature state``` which will make us come back to this file and add some stuff. We'll come to that soon. A feature, or a feature selector, is basically a slice of the global state which can be retrieved. 
 
-The command also added the ```reducers``` folder along with an ```index.ts``` file containing some scaffolded code. For the sake of this lab, remove the reducers and metareducers definition and then remove ```provideStore(reducers, { metaReducers })``` from app.config.ts. 
+The command also added the ```reducers``` folder along with an ```index.ts``` file containing some scaffolded code. For the sake of this lab, remove the reducers and metareducers definition (if existing). 
 
 ### Step 2: Define our state
-We will need to define our state, starting with the global state. In ```reducers/index.ts```, there is a state interface defined. Let's copy paste our ```IMotionSensorState``` into ```index.ts```, and add an array in the State of type ```IMotionSensorState```.
+We will need to define our state, starting with the global state. In ```reducers/index.ts```, there is a state interface defined. Let's copy paste our ```IMotionSensorState``` into ```index.ts```. Let's also add a feature wrapper state called ```IMotionSensorFeatureState``` and define an array of ```IMotionSensorState``` inside the feature state. Then add the feature state to ```State```.
 
 ```typescript
 export interface State {
-  motionSensorFeature: IMotionSensorState[];
+  motionSensorFeature: IMotionSensorFeatureState;
+}
+
+export interface IMotionSensorFeatureState {
+  motionSensors: IMotionSensorState[];
 }
 
 export interface IMotionSensorState {
@@ -425,7 +427,7 @@ import { IMotionSensorState } from '../reducers';
 export const changeState = createAction('[Motion] State change', props<{ state: IMotionSensorState }>());
 ```
 
-Here we are defining a single action, called "state changed". *I we would have more granular control of the state, we would probably define more granular actions.*
+Here we are defining a single action, called "state changed". *If we would have more granular control of the state, we would probably define more granular actions.*
 
 > **Note** [Motion] is a categorization naming convention. From the docs "*The value of the type comes in the form of [Source] Event and is used to provide a context of what category of action it is, and where an action was dispatched from.*"
 
@@ -524,7 +526,7 @@ this.motionSensors$ = this.store.select(selectFeatureMotionSensor).pipe(
 
 As you can see, we are ```selecting``` the motion sensor feature state, which returns an observable that we can pipe into as we are used to.
 
-Why does this not compile?  
+Why do we get a runtime error now?  
 
 <details>
   <summary><i>Expand for the answer</i></summary>
