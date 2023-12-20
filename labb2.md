@@ -1,7 +1,7 @@
 # Home Security System Lab
 This lab is a continuation of the [previous lab](/Labb1.md). If you have completed that lab you can begin, otherwise you will find a "finished" lab 1 solution [here](https://github.com/ActiveSolution/Frontend-Code-Labs/tree/main/src) to begin this lab from.
 
-## Content of this lab (TODO)
+## Content of this lab
 1. [Recap - where are we now](#recap---where-are-we-now)
 2. [This lab](#this-lab)
 3. [Create a continous sensor state change feed](#create-a-continous-sensor-state-change-feed)
