@@ -1,6 +1,9 @@
-<div>
-  <button (click)="setMotionDetected()">Motion detected</button>
-  <button (click)="clearMotion()">Motion cleared</button>
-
-  {{ motionDetected ? "Motion Detected" : "No Motion Detected" }}
+<div class="motion-sensor" ngClass="{{ state.state ? 'active': '' }}">
+  <div class="icon">
+    <mat-icon fontIcon="visibility" style="font-size: 48px"></mat-icon>
+  </div>
+  <div class="info">
+    <div>{{ state.name }}</div>
+    <div>{{ state.message }}</div>
+  </div>
 </div>
